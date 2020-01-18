@@ -10,10 +10,6 @@ TOTP totp = TOTP(hmacKey, 10);
 char code[7];
 RTC_DS1307 RTC;
 
-const int colorR = 0;
-const int colorG = 0;
-const int colorB = 255;
-
 void setup() {
 
   // Begin serial
@@ -40,63 +36,44 @@ void setup() {
 }
 
 void loop() {
+  
+  String url = "example.com/";
+  url += random(1, 65535);
 
-//  Serial.println("Hello.");
-//
-//  uint32_t dt = millis();
-//
-//  Serial.println("Starting QR generation.");
-//
-//  String url = "example.com/";
-//  url += random(1, 65535);
-//
-//  char urlArr[sizeof(url)];
-//  url.toCharArray(urlArr, sizeof(urlArr));
-//
-//  QRCode qrcode;  
-//  uint8_t qrcodeData[qrcode_getBufferSize(6)];;
-//  qrcode_initText(&qrcode, qrcodeData, 6, ECC_LOW, urlArr);
-//
-//  dt = millis() - dt;
-//  Serial.print("QR code generation time: ");
-//  Serial.print(dt);
-  Serial.print("\n");
+  Serial.print(url);
 
-//  unsigned char image[1681];
-//  int i = 0;
+  char urlArr[sizeof(url)];
+  url.toCharArray(urlArr, sizeof(urlArr));
 
-//  for (uint8_t y = 0; y < qrcode.size; y++) {
-//    for (uint8_t x = 0; x < qrcode.size; x++) {
-//      if (qrcode_getModule(&qrcode, x, y)) {
-//        image[i] = 0xFF;
-//      } else {
-//        image[i] = 0x00;
-//      }
-//      i++;
-//    }
-//  }
+  QRCode qrcode;  
+  uint8_t qrcodeData[qrcode_getBufferSize(3)];;
+  qrcode_initText(&qrcode, qrcodeData, 3, ECC_LOW, urlArr);
+  
+  unsigned char image[16384];
+  int i = 0;
+
+  for (uint8_t y = 0; y < qrcode.size; y++) {
+    for (uint8_t x = 0; x < qrcode.size; x++) {
+      if (qrcode_getModule(&qrcode, x, y)) {
+        image[i] = 0xFF;
+        image[i+1] = 0xFF;
+        image[i+2] = 0xFF;
+        image[i+3] = 0xFF;
+      } else {
+        image[i] = 0x00;
+        image[i+1] = 0x00;
+        image[i+2] = 0x00;
+        image[i+3] = 0x00;
+
+        Serial.print(" ");
+      }
+      i += 4;
+    }
+    Serial.println();
+  }
 
   SeeedGrayOled.clearDisplay();
-//  SeeedGrayOled.drawBitmap(image, sizeof image);
-
-  DateTime now = RTC.now();
-  
-  Serial.print("Current time: ");
-  Serial.print(now.year(), DEC);
-  Serial.print('/');
-  Serial.print(now.month(), DEC);
-  Serial.print('/');
-  Serial.print(now.day(), DEC);
-  Serial.print(' ');
-  Serial.print(now.hour(), DEC);
-  Serial.print(':');
-  Serial.print(now.minute(), DEC);
-  Serial.print(':');
-  Serial.print(now.second(), DEC);
-  Serial.println();
-  
-  char* newCode = totp.getCode(now.unixtime());
-  Serial.println(newCode);
+  SeeedGrayOled.drawBitmap(image, sizeof image);
 
   delay(5000);
 
